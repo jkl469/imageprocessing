@@ -1,0 +1,27 @@
+clear all;
+original_picture=imread("car.jpg");
+GrayPic=rgb2gray(original_picture)
+I=GrayPic
+Len=10;
+Theta=0;
+PSF=fspecial('motion',Len,Theta);
+gb=imfilter(I,PSF,'circular','conv');
+Wnrl=deconvwnr(gb,PSF);
+BlurredD=imfilter(I,PSF,'circ','conv');
+INITPSF=ones(size(PSF));
+[K,DePSF]=deconvblind(BlurredD,INITPSF,30);
+BlurredB=imfilter(I,PSF,'conv');
+V=0.02;
+Blurred_I_Noisy=imnoise(BlurredB,'gaussian',0,V);
+NP=V*prod(size(I));
+J=deconvreg(Blurred_I_Noisy,PSF,NP);
+BlurredC=imfilter(I,PSF,'symmetric','conv');
+V=0.002;
+BlurredNoisy=imnoise(BlurredC,'gaussian',0,V);
+Luc=deconvlucy(BlurredNoisy,PSF,5);
+subplot(2,3,1);imshow(I);title('原图像');
+subplot(2,3,6);imshow(gb);title('运动模糊后图像');
+subplot(2,3,2);imshow(Wnrl);title('维纳滤波修复图像');
+subplot(2,3,3);imshow(J);title('最小二乘方修复图像');
+subplot(2,3,4);imshow(Luc);title('Lucy-Richardson修复图像');
+subplot(2,3,5);imshow(K);title('盲去卷积修复图像');
